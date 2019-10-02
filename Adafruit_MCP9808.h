@@ -23,7 +23,12 @@
 #include "WProgram.h"
 #endif
 
+#ifdef SOFTWAREWIRE
+#include <SoftwareWire.h> 
+#else
 #include <Wire.h>
+#endif
+
 
 #define MCP9808_I2CADDR_DEFAULT 0x18 ///< I2C address
 #define MCP9808_REG_CONFIG 0x01      ///< MCP9808 config register
@@ -53,10 +58,17 @@
 class Adafruit_MCP9808 {
 public:
   Adafruit_MCP9808();
+
+#ifdef SOFTWAREWIRE
+  bool begin(SoftwareWire &theWire);
+  bool begin(uint8_t addr, SoftwareWire &theWire);
+#else
   bool begin();
-  bool begin(TwoWire *theWire);
   bool begin(uint8_t addr);
-  bool begin(uint8_t addr, TwoWire *theWire);
+
+  bool begin(TwoWire &theWire);
+  bool begin(uint8_t addr, TwoWire &theWire);
+#endif
 
   bool init();
   float readTempC();
@@ -75,7 +87,11 @@ public:
   uint8_t read8(uint8_t reg);
 
 private:
+#ifdef SOFTWAREWIRE
+  SoftwareWire *_wire;
+#else 
   TwoWire *_wire;
+#endif
   uint8_t _i2caddr;
 };
 

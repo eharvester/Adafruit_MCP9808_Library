@@ -9,7 +9,15 @@ products from Adafruit!
 */
 /**************************************************************************/
 
-#include <Wire.h>
+// support for testato softwarewire 
+// https://github.com/Testato/SoftwareWire
+#ifdef SOFTWAREWIRE
+#include <SoftwareWire.h> 
+SoftwareWire SoftI2C56(5, 6); //SDA, SCL
+#else
+#include <Wire.h> 
+#endif
+
 #include "Adafruit_MCP9808.h"
 
 // Create the MCP9808 temperature sensor object
@@ -19,7 +27,17 @@ void setup() {
   Serial.begin(9600);
   while (!Serial); //waits for serial terminal to be open, necessary in newer arduino boards.
   Serial.println("MCP9808 demo");
+
+#ifdef SOFTWAREWIRE
+// Software I2C 
+  SoftI2C56.begin();
+  SoftI2C56.setClock(1000000UL); // set software I2C clock speed, get to max about 100kHz
+#else
+  Wire.begin();
+#endif
   
+
+
   // Make sure the sensor is found, you can also pass in a different i2c
   // address with tempsensor.begin(0x19) for example, also can be left in blank for default address use
   // Also there is a table with all addres possible for this sensor, you can connect multiple sensors
@@ -33,7 +51,11 @@ void setup() {
   //  1  0  1   0x1D
   //  1  1  0   0x1E
   //  1  1  1   0x1F
-  if (!tempsensor.begin(0x18)) {
+#ifdef SOFTWAREWIRE
+  if (!tempsensor.begin(0x18,SoftI2C56)) {
+#else 
+  if (!tempsensor.begin(0x18,Wire)) {
+#endif
     Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
     while (1);
   }

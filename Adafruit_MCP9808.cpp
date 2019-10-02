@@ -27,17 +27,23 @@
  *     v1.0 - First release
  */
 
+// test
+
 #if ARDUINO >= 100
 #include "Arduino.h"
 #else
 #include "WProgram.h"
 #endif
 
+#ifdef SOFTWAREWIRE
+#include <SoftwareWire.h> 
+#else
 #ifdef __AVR_ATtiny85__
 #include "TinyWireM.h"
 #define Wire TinyWireM
 #else
 #include <Wire.h>
+#endif
 #endif
 
 #include "Adafruit_MCP9808.h"
@@ -52,22 +58,28 @@ Adafruit_MCP9808::Adafruit_MCP9808() {}
  *    @param  *theWire
  *    @return True if initialization was successful, otherwise false.
  */
-bool Adafruit_MCP9808::begin(TwoWire *theWire) {
-  _wire = theWire;
+
+#ifdef SOFTWAREWIRE
+bool Adafruit_MCP9808::begin(SoftwareWire &theWire) {
+#else
+bool Adafruit_MCP9808::begin(TwoWire &theWire) {
+#endif 
+  _wire = &theWire;
   _i2caddr = MCP9808_I2CADDR_DEFAULT;
   return init();
 }
-
 /*!
  *    @brief  Setups the HW
  *    @param  addr
  *    @return True if initialization was successful, otherwise false.
  */
+#ifndef SOFTWAREWIRE
 bool Adafruit_MCP9808::begin(uint8_t addr) {
   _i2caddr = addr;
   _wire = &Wire;
   return init();
 }
+#endif
 
 /*!
  *    @brief  Setups the HW
@@ -75,28 +87,34 @@ bool Adafruit_MCP9808::begin(uint8_t addr) {
  *    @param  *theWire
  *    @return True if initialization was successful, otherwise false.
  */
-bool Adafruit_MCP9808::begin(uint8_t addr, TwoWire *theWire) {
+
+#ifdef SOFTWAREWIRE
+bool Adafruit_MCP9808::begin(uint8_t addr, SoftwareWire &theWire) {
+#else
+bool Adafruit_MCP9808::begin(uint8_t addr, TwoWire &theWire) {
+#endif
   _i2caddr = addr;
-  _wire = theWire;
+  _wire = &theWire;
   return init();
 }
+
 
 /*!
  *    @brief  Setups the HW with default address
  *    @return True if initialization was successful, otherwise false.
  */
+#ifndef SOFTWAREWIRE
 bool Adafruit_MCP9808::begin() {
   _i2caddr = MCP9808_I2CADDR_DEFAULT;
   _wire = &Wire;
   return init();
 }
-
+#endif
 /*!
  *    @brief  init function
  *    @return True if initialization was successful, otherwise false.
  */
 bool Adafruit_MCP9808::init() {
-  _wire->begin();
 
   if (read16(MCP9808_REG_MANUF_ID) != 0x0054)
     return false;
